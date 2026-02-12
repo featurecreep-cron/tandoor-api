@@ -108,10 +108,8 @@ jobs:
           fi
 
           # Get changed files between refs via GitHub API
-          changed_files=$(gh api "repos/${{ vars.UPSTREAM_REPO }}/compare/${STORED_REF}...${LATEST_REF}" \
-            --jq '.files[].filename' 2>/dev/null || echo "COMPARE_FAILED")
-
-          if [ "$changed_files" = "COMPARE_FAILED" ]; then
+          if ! changed_files=$(gh api "repos/${{ vars.UPSTREAM_REPO }}/compare/${STORED_REF}...${LATEST_REF}" \
+            --jq '.files[].filename' 2>/dev/null); then
             echo "Could not compare refs, assuming API changed"
             echo "api_changed=true" >> "$GITHUB_OUTPUT"
             exit 0
