@@ -14,8 +14,6 @@ on:
 # Required repo variables (Settings > Secrets and variables > Actions > Variables):
 #   UPSTREAM_REPO  - e.g. TandoorRecipes/recipes
 #   UPSTREAM_URL   - e.g. https://github.com/TandoorRecipes/recipes.git
-#   API_PATHS      - space-separated paths to check for API changes
-#                    e.g. "cookbook/serializer cookbook/views cookbook/urls"
 
 permissions:
   contents: write
@@ -75,61 +73,9 @@ jobs:
             echo "has_new_tag=false" >> "$GITHUB_OUTPUT"
           fi
 
-  check-api-changes:
+  build-and-publish:
     needs: check-upstream
     if: needs.check-upstream.outputs.has_new_tag == 'true'
-    runs-on: ubuntu-latest
-    outputs:
-      api_changed: ${{ steps.diff.outputs.api_changed }}
-    steps:
-      - name: Check if API-related files changed
-        id: diff
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-
-          FORCE="${{ inputs.force || 'false' }}"
-          STORED_REF="${{ needs.check-upstream.outputs.stored_ref }}"
-          LATEST_REF="${{ needs.check-upstream.outputs.latest_ref }}"
-          API_PATHS="${{ vars.API_PATHS }}"
-
-          if [ "$FORCE" = "true" ]; then
-            echo "Force build, skipping API diff"
-            echo "api_changed=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # First build — no stored ref to compare against
-          if [ -z "$STORED_REF" ]; then
-            echo "First build, no previous ref"
-            echo "api_changed=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # Get changed files between refs via GitHub API
-          if ! changed_files=$(gh api "repos/${{ vars.UPSTREAM_REPO }}/compare/${STORED_REF}...${LATEST_REF}" \
-            --jq '.files[].filename' 2>/dev/null); then
-            echo "Could not compare refs, assuming API changed"
-            echo "api_changed=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          # Check if any changed files match API paths
-          for api_path in $API_PATHS; do
-            if echo "$changed_files" | grep -q "^${api_path}"; then
-              echo "API-related file changed under: $api_path"
-              echo "api_changed=true" >> "$GITHUB_OUTPUT"
-              exit 0
-            fi
-          done
-
-          echo "No API-related files changed, skipping build"
-          echo "api_changed=false" >> "$GITHUB_OUTPUT"
-
-  build-and-publish:
-    needs: [check-upstream, check-api-changes]
-    if: needs.check-api-changes.outputs.api_changed == 'true'
     runs-on: ubuntu-latest
 
     env:

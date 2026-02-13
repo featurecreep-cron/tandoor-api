@@ -1,0 +1,135 @@
+name: Backfill Historical Releases
+
+on:
+  workflow_dispatch:
+    inputs:
+      tags:
+        description: "JSON array of tags to build, e.g. [\"2.2.0\",\"2.3.0\"]"
+        required: true
+        type: string
+      dry_run:
+        description: "Build but don't publish to PyPI"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  build-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - name: Set matrix
+        id: set
+        run: |
+          echo "matrix={\"tag\":${{ inputs.tags }}}" >> "$GITHUB_OUTPUT"
+
+  backfill:
+    needs: build-matrix
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: ${{ fromJSON(needs.build-matrix.outputs.matrix) }}
+      max-parallel: 2
+      fail-fast: false
+
+    env:
+      DB_ENGINE: django.db.backends.sqlite3
+      SECRET_KEY: not-a-real-secret-just-for-schema-generation
+      ALLOWED_HOSTS: '*'
+
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+        with:
+          path: publisher
+
+      - name: Checkout upstream at tag ${{ matrix.tag }}
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ vars.UPSTREAM_REPO }}
+          ref: ${{ matrix.tag }}
+          path: upstream
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libsasl2-dev libldap2-dev libssl-dev libxmlsec1-dev \
+            pkg-config
+
+      - name: Install upstream Python dependencies
+        run: |
+          cd upstream
+          pip install -r requirements.txt
+          pip install drf-spectacular
+
+      - name: Extract OpenAPI schema
+        run: |
+          cd upstream
+          python ../publisher/scripts/extract_schema.py . ../publisher/schema.json
+
+      - name: Compute version
+        id: version
+        run: |
+          cd publisher
+          VERSION=$(python scripts/compute_version.py \
+            --state-file upstream_state.json \
+            --upstream-url "${{ vars.UPSTREAM_URL }}" \
+            --tag "${{ matrix.tag }}")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Building version: $VERSION"
+
+      - name: Install openapi-python-client
+        run: pip install openapi-python-client
+
+      - name: Generate client
+        run: |
+          cd publisher
+          openapi-python-client generate \
+            --path schema.json \
+            --config generator_config.yml
+
+      - name: Patch package metadata
+        run: |
+          cd publisher
+          python scripts/patch_package.py tandoor-client "${{ steps.version.outputs.version }}" \
+            --repo-url "${{ github.server_url }}/${{ github.repository }}" \
+            --upstream-url "${{ github.server_url }}/${{ vars.UPSTREAM_REPO }}"
+
+      - name: Build package
+        run: |
+          cd publisher/tandoor-client
+          pip install build
+          python -m build
+
+      - name: Smoke test
+        run: |
+          cd publisher
+          pip install tandoor-client/dist/*.whl
+          python scripts/validate_client.py tandoor-client
+
+      - name: Publish to PyPI
+        if: inputs.dry_run != true
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: publisher/tandoor-client/dist/
+
+      - name: Create GitHub Release
+        if: inputs.dry_run != true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          gh release create "v${VERSION}" \
+            --repo "${{ github.repository }}" \
+            --title "tandoor-client ${VERSION}" \
+            --notes "Backfilled from upstream Tandoor Recipes tag ${{ matrix.tag }}."
