@@ -25,8 +25,10 @@ jobs:
     steps:
       - name: Set matrix
         id: set
+        env:
+          TAGS: ${{ inputs.tags }}
         run: |
-          echo "matrix={\"tag\":${{ inputs.tags }}}" >> "$GITHUB_OUTPUT"
+          printf 'matrix={"tag":%s}\n' "$TAGS" >> "$GITHUB_OUTPUT"
 
   backfill:
     needs: build-matrix
