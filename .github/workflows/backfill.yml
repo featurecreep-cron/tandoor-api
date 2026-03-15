@@ -45,19 +45,19 @@ jobs:
 
     steps:
       - name: Checkout this repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: publisher
 
       - name: Checkout upstream at tag ${{ matrix.tag }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ vars.UPSTREAM_REPO }}
           ref: ${{ matrix.tag }}
           path: upstream
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 

@@ -27,7 +27,7 @@ jobs:
       has_tags: ${{ steps.find.outputs.has_tags }}
       latest_tag: ${{ steps.find.outputs.latest_tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Find unprocessed upstream tags
         id: find
@@ -116,19 +116,19 @@ jobs:
 
     steps:
       - name: Checkout this repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: publisher
 
       - name: Checkout upstream at ${{ matrix.tag }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ vars.UPSTREAM_REPO }}
           ref: ${{ matrix.tag }}
           path: upstream
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -234,7 +234,7 @@ jobs:
     if: needs.detect-new-tags.outputs.has_tags == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Resolve latest tag ref
         id: ref
