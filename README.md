@@ -1,5 +1,10 @@
 # Tandoor API Client Auto-Publisher
 
+[![CI](https://github.com/featurecreep-cron/tandoor-api/actions/workflows/build-and-publish.yml/badge.svg)](https://github.com/featurecreep-cron/tandoor-api/actions/workflows/build-and-publish.yml)
+[![License: MIT](https://img.shields.io/github/license/featurecreep-cron/tandoor-api)](https://github.com/featurecreep-cron/tandoor-api/blob/main/LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/tandoor-client)](https://pypi.org/project/tandoor-client/)
+[![Python](https://img.shields.io/badge/python-3.12+-blue)](https://www.python.org/downloads/)
+
 Automated pipeline that generates and publishes a typed Python client for the [Tandoor Recipes](https://tandoor.dev) REST API.
 
 The client is published to PyPI as [`tandoor-client`](https://pypi.org/project/tandoor-client/) and is updated automatically when the upstream API changes.

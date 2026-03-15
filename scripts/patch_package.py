@@ -24,7 +24,7 @@ readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
 authors = [
-    {{name = "Feature Creep", email = "cron@featurecreep.dev"}},
+    {{name = "Cron", email = "cron@featurecreep.dev"}},
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -44,6 +44,7 @@ dependencies = [
 
 [project.urls]
 Homepage = "{repo_url}"
+Repository = "{repo_url}"
 "Tandoor Recipes" = "{upstream_url}"
 "Bug Tracker" = "{repo_url}/issues"
 Funding = "https://buymeacoffee.com/featurecreep"
