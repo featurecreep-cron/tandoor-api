@@ -27,7 +27,7 @@ jobs:
       has_tags: ${{ steps.find.outputs.has_tags }}
       latest_tag: ${{ steps.find.outputs.latest_tag }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
 
       - name: Find unprocessed upstream tags
         id: find
@@ -116,19 +116,19 @@ jobs:
 
     steps:
       - name: Checkout this repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
         with:
           path: publisher
 
       - name: Checkout upstream at ${{ matrix.tag }}
-        uses: actions/checkout@v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
         with:
           repository: ${{ vars.UPSTREAM_REPO }}
           ref: ${{ matrix.tag }}
           path: upstream
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6
         with:
           python-version: "3.12"
 
@@ -213,7 +213,7 @@ jobs:
 
       - name: Publish to PyPI
         if: steps.check-pypi.outputs.exists == 'false'
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@106e0b0b7c337fa67ed433972f777c6357f78598  # v1.13.0
         with:
           packages-dir: publisher/tandoor-client/dist/
 
@@ -234,7 +234,7 @@ jobs:
     if: needs.detect-new-tags.outputs.has_tags == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
 
       - name: Resolve latest tag ref
         id: ref
