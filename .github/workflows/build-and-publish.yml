@@ -27,7 +27,7 @@ jobs:
       has_tags: ${{ steps.find.outputs.has_tags }}
       latest_tag: ${{ steps.find.outputs.latest_tag }}
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
 
       - name: Find unprocessed upstream tags
         id: find
@@ -116,12 +116,12 @@ jobs:
 
     steps:
       - name: Checkout this repo
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
         with:
           path: publisher
 
       - name: Checkout upstream at ${{ matrix.tag }}
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
         with:
           repository: ${{ vars.UPSTREAM_REPO }}
           ref: ${{ matrix.tag }}
@@ -234,7 +234,7 @@ jobs:
     if: needs.detect-new-tags.outputs.has_tags == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10  # v6
 
       - name: Resolve latest tag ref
         id: ref
