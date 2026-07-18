@@ -1,29 +1,26 @@
 name: Dependabot Auto-merge
 
+# tandoor-api has no required reviews and no PR-triggered CI, so a dependabot
+# PR just needs to be merged. No approval App (and no BOT_APP_ID/BOT_PRIVATE_KEY
+# secrets) is required — merge directly with the default token.
+
 on:
   pull_request_target:
+    types: [opened, reopened, synchronize]
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
-  automerge:
-    if: github.actor == 'dependabot[bot]'
+  merge:
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]'
+      && startsWith(github.event.pull_request.head.ref, 'dependabot/')
+      && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
-      - name: Generate token
-        id: generate_token
-        uses: actions/create-github-app-token@v3
-        with:
-          app-id: ${{ secrets.BOT_APP_ID }}
-          private-key: ${{ secrets.BOT_PRIVATE_KEY }}
-      - name: Auto-approve PR
-        uses: hmarr/auto-approve-action@b40d6c9ed2fa10c9a2749eca7eb004418a705501
-        with:
-          github-token: ${{ steps.generate_token.outputs.token }}
-      - name: Enable auto-merge
-        run: gh pr merge --auto --rebase "$PR_URL"
+      - name: Merge the dependabot PR
         env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge --squash --delete-branch "${{ github.event.pull_request.number }}" --repo "${{ github.repository }}"
